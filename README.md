@@ -38,7 +38,3 @@ To get started with the project, follow these steps:
 ## Contributions and Support
 
 We welcome contributions to the project! If you encounter any issues or have ideas for improvements, feel free to open an issue or submit a pull request. Let's make this project even better together!
-
-## License
-
-[Include your chosen license information here.]

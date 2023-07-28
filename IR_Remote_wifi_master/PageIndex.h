@@ -2,7 +2,7 @@ const char MAIN_page[] PROGMEM = R"=====(
 <!DOCTYPE HTML>
 <html>
   <head>
-    <title>ESP32 ESP-NOW & WEB SERVER (CONTROLLING)</title>
+    <title>EMMERICH ESP32 AC REMOTE ESP-NOW & WEB SERVER (CONTROLLING)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
     <link rel="icon" href="data:,">
@@ -238,15 +238,16 @@ const char MAIN_page[] PROGMEM = R"=====(
           </div>
           <br>
           
-          <h4 class="LEDColor"><i class="fas fa-lightbulb"></i> LED 1 : </h4> 
+          <h4 class="LEDColor"><i class="fas fa-power-off"></i> POWER </h4> 
           <label class="switch">
-            <input type="checkbox" id="togLED2" onclick="send_LED_State_Cmd('ESP32Slave2','togLED2','13')">
+            <input type="checkbox" id="togPower1" onclick="send_LED_State_Cmd('ESP32Slave1','togPower1','1')">
             <div class="sliderTS"></div>
           </label>
           <br><br>
-          <h4 class="LEDColor"><i class="fas fa-lightbulb"></i> LED 2 : </h4> 
+          
+          <h4 class="LEDColor"><i class="fas fa-temperature-low"></i> TEMP </h4> 
           <div class="slidecontainer">
-            <input type="range" min="0" max="10" value="0" class="slider" id="mySlider2">
+            <input type="range" min="16" max="32" value="16" class="slider" id="tempSlider1">&nbsp<span id="tempTextSlider1">16</span><sup>o</sup>
           </div>
           <br>
         </div>
@@ -345,6 +346,7 @@ const char MAIN_page[] PROGMEM = R"=====(
         }
 
       }
+      
       // ---------------------------------------------------------------------- XMLHttpRequest to submit data.
       function send_cmd(board,gpio,value) {
         var xhr = new XMLHttpRequest();
@@ -357,6 +359,7 @@ const char MAIN_page[] PROGMEM = R"=====(
       let timerInterval;
       let acTimeValue;
       let offTimeValue;
+      let timeValue;
       let acState = false; // The initial state is OFF
 
       function getCurrentDate() {
@@ -389,13 +392,17 @@ const char MAIN_page[] PROGMEM = R"=====(
         const [acHours, acMinutes] = acTimeValue.split(":");
         const [offHours, offMinutes] = offTimeValue.split(":");
 
-
         // Clear any existing timer interval
         clearInterval(timerInterval);
 
-        // Start the timer to check for the specified time
+        // Start the timer to check for the specified times
         timerInterval = setInterval(checkTime, 1000);
-        checkTime();
+
+        // Save the time values in local storage
+        localStorage.setItem('acTimeValue', acTimeValue);
+        localStorage.setItem('offTimeValue', offTimeValue);
+        timeValue = 1;
+        localStorage.setItem('timeValue', timeValue);
 
         // Display a message indicating the timer has been set
         const timerStatusElement = document.getElementById("timerStatus");
@@ -423,14 +430,14 @@ const char MAIN_page[] PROGMEM = R"=====(
 
         if (!acState && now >= acTargetTime) {
           // Send the command to the ESP32 board to turn on the AC
-          send_cmd('ESP32AllSlave', 1, 1);
+          send_cmd('ESP32AllSlave', 15, 1);
           console.log("AC is now ON");
           acState = true;
         }
 
         if (acState && now >= offTargetTime) {
           // Send the command to the ESP32 board to turn off the AC
-          send_cmd('ESP32AllSlave', 1, 0);
+          send_cmd('ESP32AllSlave', 15, 0);
           console.log("AC is now OFF");
           acState = false;
         }
@@ -440,10 +447,46 @@ const char MAIN_page[] PROGMEM = R"=====(
         // Clear the interval to stop the timer
         clearInterval(timerInterval);
 
+        // Reset the timer values and update the input fields
+        acTimeValue = '08:00';
+        offTimeValue = '18:00';
+        document.getElementById('acTime').value = acTimeValue;
+        document.getElementById('offTime').value = offTimeValue;
+        timeValue = 0;
+        localStorage.setItem('timeValue', timeValue);
+
         // Display a message indicating the timer has been stopped
-        const timerStatusElement = document.getElementById("timerStatus");
-        timerStatusElement.textContent = "Timer has been stopped.";
+        const timerStatusElement = document.getElementById('timerStatus');
+        timerStatusElement.textContent = 'Timer has been stopped.';
+
+        // Remove the timer values from localStorage
+        localStorage.removeItem('acTimeValue');
+        localStorage.removeItem('offTimeValue');
       }
+
+
+      // Function to send the command to the ESP32 board
+      function send_cmd(board, gpio_output, val) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", `set_LED?board=${board}&gpio_output=${gpio_output}&val=${val}`, true);
+        xhr.send();
+      }
+
+      // Load saved time values from local storage on page load
+      window.addEventListener('load', () => {
+        acTimeValue = localStorage.getItem('acTimeValue') || '08:00';
+        offTimeValue = localStorage.getItem('offTimeValue') || '18:00';
+        timeValue = localStorage.getItem('timeValue');
+
+        document.getElementById('acTime').value = acTimeValue;
+        document.getElementById('offTime').value = offTimeValue;
+
+        if(timeValue != 0){
+        // Display a message indicating the timer has been set
+        const timerStatusElement = document.getElementById("timerStatus");
+        timerStatusElement.textContent = `Timer set: AC ON at ${acTimeValue}, AC OFF at ${offTimeValue}.`;
+        }
+      });
 
       // Display the current date and time when the page loads
       displayCurrentDate();

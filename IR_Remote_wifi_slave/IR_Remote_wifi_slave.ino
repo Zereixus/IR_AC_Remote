@@ -57,7 +57,7 @@ const unsigned long intervalScanMillis = intervalScanMinutes * 60 * 1000;  // Ko
 
 // ======================================== Indicator Value
 String powerState = "OFF";
-String tempState = degrees.toString() + "\u00B0";
+String tempState = String(degrees, 1) + "\u00B0";
 String timerState = "Timer not Set";
 
 //=========================================
@@ -106,7 +106,7 @@ void OnDataRecv(const uint8_t * mac_addr, const uint8_t *incomingData, int len) 
     }else{
       digitalWrite(LED_1, LOW);
       ac.next.power = false;
-      powerState = "OFF"
+      powerState = "OFF";
     }
     lcd.clear();
     lcd.print("Turning On/Off");
@@ -121,14 +121,17 @@ void OnDataRecv(const uint8_t * mac_addr, const uint8_t *incomingData, int len) 
     }else if (indicator == 0 && degrees>16){
       degrees--;
       ac.next.degrees = degrees;
+    }else if (indicator > 1){
+      degrees = indicator;
+      ac.next.degrees = degrees;
     }
-    tempState = degrees.toString() + "\u00B0";
+    tempState = String(degrees, 1) + "\u00B0";
     lcd.clear();
     lcd.print("Setting Temp");
     ac_command();
   }
 
-  if (receive_Data.receive_GPIO_num == 3) {
+  if (receive_Data.receive_GPIO_num == 3) { //not all supported
     if (indicator == 2){
       ac.next.fanspeed = stdAc::fanspeed_t::kLow;
     }
@@ -146,8 +149,8 @@ void OnDataRecv(const uint8_t * mac_addr, const uint8_t *incomingData, int len) 
     ac_command();
   }
 
-  if (receive_Data.receive_GPIO_num == 4) {
-    // Not Implemeted
+  if (receive_Data.receive_GPIO_num == 15) {
+    // Not impemented Timer
   }
 
   // ---------------------------------------- 
@@ -361,6 +364,8 @@ void ac_command() {
   lcd.print(powerState);
   lcd.setCursor(12,0);
   lcd.print(tempState);
+  lcd.setCursor(0,1);
+  lcd.print(timerState);
 
   
   //Serial.println("Already Checking all Protocol");

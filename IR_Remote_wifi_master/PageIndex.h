@@ -297,7 +297,7 @@ const char MAIN_page[] PROGMEM = R"=====(
       function myTmr_send_LED_PWM_Cmd() {
         if (sliders_used == "SL1") {
           if (last_sliderTemp1_val != sliderTemp1.value) {
-            send_cmd('ESP32Slave1',12,sliderTemp1.value);
+            send_cmd('ESP32Slave1',2,sliderTemp1.value);
             document.getElementById("tempTextSlider1").innerHTML = sliderTemp1.value;
           }
           last_sliderTemp1_val = sliderTemp1.value;
@@ -498,4 +498,4 @@ const char MAIN_page[] PROGMEM = R"=====(
     </script>
   </body>
 </html>
-<!-- )=====";
+)=====";
